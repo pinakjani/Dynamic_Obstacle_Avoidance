@@ -231,7 +231,9 @@ def place_t4(field,x,y):
 class Player(pygame.sprite.Sprite):
     def __init__(self,pos=(80,40)):
         super(Player, self).__init__()
-        self.surf = pygame.Surface((25, 11))
+        self.width = 25
+        self.height = 11
+        self.surf = pygame.Surface((self.width, self.height))
         self.surf.fill((0, 0, 255))
         self.surf.set_colorkey(BLACK)  
         self.image = self.surf.copy()
@@ -298,7 +300,9 @@ class Player(pygame.sprite.Sprite):
 class Dynamic_obs(pygame.sprite.Sprite):
     def __init__(self):
         super(Dynamic_obs, self).__init__()
-        self.surf = pygame.Surface((50, 25))
+        self.width = 50
+        self.height = 25
+        self.surf = pygame.Surface((self.width, self.height))
         self.surf.fill(BLACK)
         self.rect = self.surf.get_rect(
             center=(
@@ -307,6 +311,8 @@ class Dynamic_obs(pygame.sprite.Sprite):
             )
         )
         self.speed = 1
+    
+
 
     # Move the sprite based on speed
     # Remove the sprite when it passes the left edge of the screen
@@ -314,3 +320,64 @@ class Dynamic_obs(pygame.sprite.Sprite):
         self.rect.move_ip(self.speed, 0)
         if self.rect.right < 0:
             self.kill()
+
+    def find_boundary_ego_vehicle(self):
+        self.ego_vehicle = Player()
+        ego_height_const = self.ego_vehicle.height/2
+        ego_width_const = self.ego_vehicle.width/2
+        return ego_width_const, ego_height_const
+
+    def find_corners_obs(self):
+        center_x = self.rect.center[0]
+        center_y = self.rect.center[1]
+        corner_x = []
+        corner_y = []
+
+        right_top_corner_x = center_x + self.width/2
+        right_bottom_corner_x = center_x + self.width/2
+        left_top_corner_x = center_x - self.width/2
+        left_bottom_corner_x = center_x - self.width/2
+
+        corner_x.append(right_top_corner_x)
+        corner_x.append(right_bottom_corner_x)
+        corner_x.append(left_bottom_corner_x)
+        corner_x.append(left_top_corner_x)
+
+        right_top_corner_y = center_y - self.height/2
+        right_bottom_corner_y = center_y + self.height/2
+        left_top_corner_y = center_y - self.height/2
+        left_bottom_corner_y = center_y + self.height/2
+
+        corner_y.append(right_top_corner_y)
+        corner_y.append(right_bottom_corner_y)
+        corner_y.append(left_bottom_corner_y)
+        corner_y.append(left_top_corner_y)
+
+        return corner_x, corner_y
+
+    def get_boundary(self):
+        corner_x,corner_y = self.find_corners_obs()
+        width_const, height_const = self.find_boundary_ego_vehicle()
+        bound_x = []
+        bound_y = []
+
+        bound_x_right_top = corner_x[0] + width_const
+        bound_x.append(bound_x_right_top)
+        bound_y_right_top = corner_y[0] - height_const
+        bound_y.append(bound_y_right_top)
+        bound_x_right_bottom= corner_x[1] + width_const
+        bound_x.append(bound_x_right_bottom)
+        bound_y_right_bottom = corner_y[1] + height_const
+        bound_y.append(bound_y_right_bottom)
+              
+        bound_x_left_bottom = corner_x[2] - width_const
+        bound_x.append(bound_x_left_bottom)
+        bound_y_left_bottom = corner_y[2] + height_const
+        bound_y.append(bound_y_left_bottom)
+        bound_x_left_top = corner_x[3] - width_const
+        bound_x.append(bound_x_left_top)
+        bound_y_left_top = corner_y[3] - height_const
+        bound_y.append(bound_y_left_top)
+
+        return bound_x, bound_y
+        

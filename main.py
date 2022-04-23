@@ -77,6 +77,8 @@ while running:
         player.i+=1
         for obs in moving_obs:
             Dynamic_obs.update(obs)
+            bound_x, bound_y = Dynamic_obs.get_boundary(obs)
+            print(bound_x, bound_y)
     for obs in moving_obs:
         screen.blit(obs.surf,obs.rect)    
 
