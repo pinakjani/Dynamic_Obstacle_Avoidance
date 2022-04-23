@@ -1,3 +1,5 @@
+from hashlib import new
+from os import stat_result
 import numpy as np
 import math
 from global_vars import*
@@ -123,7 +125,7 @@ def Astar(field,start,goal):
         #     k3 = 200
         for u_s in u_s_val:
             for u_phi in u_phi_val:
-                theta_next = round((u_s * round(math.tan(u_phi+curr_head),3) / L),3) + curr_head
+                theta_next = round((u_s * round(math.tan(u_phi),3) / L),3) + curr_head
                 rr = round((u_s * math.cos(theta_next)) + curr_node[0])
                 rc = round((u_s * math.sin(theta_next)) + curr_node[1])
                 position = rr, rc
@@ -157,5 +159,71 @@ def Astar(field,start,goal):
     # print("out",field)
     path = dijkstra_path(prev,goal,start)
     return path
+
+
+def check_dynamic_collision(dynamic_obs,state):
+    x,y,theta = state
+    for obs in dynamic_obs:
+        if (x<=obs[0][0] and x>=obs[0][2]) and (y<=obs[1][1] and y>=obs[1][0]):
+            return True
+    return False
+
+def check_static_collision(obs_map,state):
+    x,y,theta = state
+    p_x = x//15
+    p_y = y//15
+    for obs in obs_map:
+        if(obs[0] == (p_x,p_y) or obs[1] == (p_x,p_y) or obs[2] == (p_x,p_y) or obs[3] == (p_x,p_y)):
+            return True
+    return False
+
+def isfree(state,obs,dynamic_obs):
+    x,y,theta = state
+    px = x//15
+    py = y//15
+    if x<0 or y<0:
+        return False
+    elif x>=WINDOW_WIDTH or y>=WINDOW_HEIGHT:
+        return False
+    elif check_static_collision(obs,state):
+        return False
+    elif check_dynamic_collision(dynamic_obs,state):
+        return False
+    else:
+        return True
+
+def local_planner(curr_state,goal,obs_map,dynamic_obs):
+    reached_goal = False
+    L = 12
+    curr_nodex,curr_nodey,curr_head = curr_state
+    u_s_val = [3,0,-3]
+    u_phi_val = [math.pi/3,-math.pi/3,0]
+    states = []
+    for u_s in u_s_val:
+        for u_phi in u_phi_val:
+            theta_next = round((u_s * round(math.tan(u_phi),3) / L),3) + curr_head
+            rr = round((u_s * math.cos(theta_next)) + curr_nodex)
+            rc = round((u_s * math.sin(theta_next)) + curr_nodey)
+            heading = round(theta_next,2)
+            new_state = rr,rc,heading
+            if isfree(new_state,obs_map,dynamic_obs):
+                states.append(new_state)
+    print(states)
+    if len(states)==0:
+        print("No Free state")
+    min_dist = 10000
+    for state in states:
+        node = state[0],state[1]
+        dist = euc_dist(node,goal)
+        if dist<min_dist:
+            out = state
+            min_dist = dist
+        print("min",min_dist," ",out)
+    if min_dist<=20:
+        reached_goal = True
+    return out,reached_goal
+
+        
+
 
 

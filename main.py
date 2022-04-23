@@ -1,3 +1,4 @@
+from operator import index
 from numpy import angle, append
 import pygame
 from env import Dynamic_obs, burn_random, check_to_extinguishPRM, draw_PRM_path, draw_path, drawGrid, find_nearest, generate_obstacles, compute_obsmap, burn, make_black, spread_fire
@@ -42,13 +43,14 @@ screen.blit(player.new_image,player.rect)
 pygame.display.flip()
 
 start = (1,1)
-curr_node = start
+curr_node = (start[0],start[1],0)
 goal = (550,550)
 prm = PRMController(numOfRandomCoordinates=2000, allObs=obs_map, current=start,destination=goal)
 path,points = prm.runPRM(initialRandomSeed=0,screen = screen)
 # print("goal:",goal)
 
-
+dynamic = []
+ind = 1
 draw_PRM_path(screen,path,points)
 while running:
     count+=1    
@@ -58,7 +60,17 @@ while running:
     generate_obstacles(screen,field)
     draw_PRM_path(screen,path,points)
 
-    reached,curr_node = player.PRM_navigate(path,curr_node,player.i)
+    if count%20==0:
+        player.i+=1
+        dynamic_obs_list = []
+        for obs in moving_obs:
+            Dynamic_obs.update(obs)
+            bound_x, bound_y = Dynamic_obs.get_boundary(obs)
+            dynamic_obs_list.append([bound_x,bound_y])
+            # print(bound_x, bound_y)
+            dynamic = dynamic_obs_list
+
+    reached,curr_node,ind = player.PRM_navigate(path,curr_node,index=ind,obs_map=obs_map,dynamic_obs=dynamic)
     # print(burning,extinguish)
     if reached:
        running = False
@@ -73,12 +85,7 @@ while running:
                 running = False
           
         # Check for QUIT event. If QUIT, then set running to false.
-    if count%20==0:
-        player.i+=1
-        for obs in moving_obs:
-            Dynamic_obs.update(obs)
-            bound_x, bound_y = Dynamic_obs.get_boundary(obs)
-            print(bound_x, bound_y)
+  
     for obs in moving_obs:
         screen.blit(obs.surf,obs.rect)    
 

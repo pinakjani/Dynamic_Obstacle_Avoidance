@@ -4,7 +4,7 @@ import pygame
 from pygame import K_RETURN, K_RIGHT, K_LEFT, K_UP, K_DOWN, KEYUP
 from global_vars import*
 from pygame.math import Vector2
-from algorithm import euc_dist
+from algorithm import euc_dist,local_planner
 import numpy as np
 from numpy import random
 
@@ -272,28 +272,26 @@ class Player(pygame.sprite.Sprite):
             reached = True
         return reached,curr_node
 
-    def PRM_navigate(self,path,curr_node,t):
-        blockSize = 1
-        if t<len(path) and (euc_dist(path[t],path[-1])>2.5):
-            ind = t
-            # m = (path[ind][1]-path[ind-1][1])/(path[ind][0]-path[ind-1][0])
-            # if ind == len(path)-1:
-            # ang = 0
-            # else:
-            # ang = round(path[ind][2],2)
-            ang = math.atan2((path[ind][1]-path[ind-1][1]),(path[ind][0]-path[ind-1][0]))
-            # print("ang",ang)
-            self.angle = round((ang*180/math.pi))
+   
+    def PRM_navigate(self,path,curr_node,index,obs_map,dynamic_obs):
+        if index<len(path):
+            # ang = math.atan2((path[ind][1]-path[ind-1][1]),(path[ind][0]-path[ind-1][0]))
+            print("curr_node",curr_node," ",index," ",path[index])
+            state,reached_waypoint = local_planner(curr_node,path[index],obs_map,dynamic_obs)
+            print("new",state)
+            if reached_waypoint:
+                index+=1
             # print(path[ind][2],self.angle)
+            self.angle = round((state[2]*180/math.pi))
             self.new_image = pygame.transform.rotate(self.surf, -self.angle)
             self.rect = self.new_image.get_rect()
-            self.rect.centerx = (path[ind][0]*blockSize)
-            self.rect.centery = (path[ind][1]*blockSize)
+            self.rect.centerx = state[0]
+            self.rect.centery = state[1]
             reached = False
-            curr_node = path[ind]
+            curr_node = state
         else:
             reached = True
-        return reached,curr_node
+        return reached,curr_node,index
 
 
 
@@ -310,7 +308,7 @@ class Dynamic_obs(pygame.sprite.Sprite):
                 random.randint(5, 500),
             )
         )
-        self.speed = 1
+        self.speed = 6
     
 
 
@@ -360,7 +358,8 @@ class Dynamic_obs(pygame.sprite.Sprite):
         width_const, height_const = self.find_boundary_ego_vehicle()
         bound_x = []
         bound_y = []
-
+        width_const*=2
+        height_const*=2
         bound_x_right_top = corner_x[0] + width_const
         bound_x.append(bound_x_right_top)
         bound_y_right_top = corner_y[0] - height_const
