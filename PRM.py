@@ -30,7 +30,8 @@ class PRMController:
         pygame.draw.circle(screen, BLACK, (200,200), 100)
         # Create new obstacle map
         self.obsmap = self.extend_obstacles()
-        # print('watch this',self.obsmap)
+        print(self.obsmap)
+        # print(self.allObs)
         while(not self.solutionFound):
             print("Trying with random seed {}".format(seed))
             np.random.seed(seed)
@@ -52,12 +53,20 @@ class PRMController:
             # self.coordsList = np.array([])
             # self.graph = Graph()
 
-        print("Collision Free Points",self.collisionFreePoints)
+        # if(saveImage):
+            # plt.savefig("{}_samples.png".format(self.numOfCoords))
+        # plt.show()
         return final_path,self.collisionFreePoints
 
     def genCoords(self, maxSizeOfMap=WINDOW_WIDTH):
-        self.coordsList = np.random.randint(
-            maxSizeOfMap, size=(self.numOfCoords, 2))
+        coordsList_x = np.random.randint(
+            maxSizeOfMap, size=(self.numOfCoords, 1))
+
+        coordsList_y = np.random.randint(
+            WINDOW_HEIGHT, size=(self.numOfCoords, 1))
+
+        self.coordsList = np.column_stack((coordsList_x, coordsList_y))
+
         # Adding begin and end points
         self.current = self.current.reshape(1, 2)
         self.destination = self.destination.reshape(1, 2)
@@ -151,9 +160,9 @@ class PRMController:
 
     def extend_obstacles(self):
         final_obs = []
+        padding = 1.5
         for obstacle in self.allObs:
             addition= []
-            padding = 1.5
             for obs in obstacle:
                 new_obs1 = (obs[0]-padding,obs[1])
                 new_obs2 = (obs[0],obs[1]-padding)
@@ -163,6 +172,7 @@ class PRMController:
                 new_obs6 = (obs[0]+padding,obs[1]+padding)
                 new_obs7 = (obs[0]+padding,obs[1]-padding)
                 new_obs8 = (obs[0]-padding,obs[1]+padding)
+
                 if new_obs1 not in obstacle and new_obs1 not in addition:
                     addition.append(new_obs1)
                 if new_obs2 not in obstacle and new_obs2 not in addition:
@@ -179,8 +189,8 @@ class PRMController:
                     addition.append(new_obs7)
                 if new_obs8 not in obstacle and new_obs8 not in addition:
                     addition.append(new_obs8)
+
             obstacle+=addition
-            # print("see this",obstacle)
             new_list_minx = []
             new_list_maxx = []
             sorted_by_x = sorted(obstacle)
@@ -196,7 +206,6 @@ class PRMController:
             
             res = [(sorted_by_second_minX[0][0]*15,sorted_by_second_minX[0][1]*15),(sorted_by_second_minX[-1][0]*15,sorted_by_second_minX[-1][1]*15),
             (sorted_by_second_maxX[0][0]*15,sorted_by_second_maxX[0][1]*15),(sorted_by_second_maxX[-1][0]*15,sorted_by_second_maxX[-1][1]*15)]
-            print("res",res)
             final_obs.append(res) 
         return final_obs
 
@@ -211,8 +220,6 @@ class PRMController:
             if(collision):
                 return True
         return False
-
-
 
     def findNodeIndex(self, p):
         # print("jo",np.where((self.collisionFreePoints == p).all(axis=1)))
@@ -244,13 +251,18 @@ class PRMController:
         # plt.scatter(x, y, c="black", s=1)
 
     def checkCollision(self, obs, point):
+        # p_x = point[0]
+        # p_y = point[1]
+
+        # if(obs[0] == (p_x,p_y) or obs[1] == (p_x,p_y) or obs[2] == (p_x,p_y) or obs[3] == (p_x,p_y)):
+        #     return True
+        # else:
+        #     return False
         point = shapely.geometry.Point(point)
         obstacleShape = shapely.geometry.Polygon(obs).convex_hull
-        # print("point",(p_x,p_y),"and ",obs)
+
         if point.intersects(obstacleShape):
-            # print("point",point,"colliding with",obstacleShape)
             return True
-            
         else:
             return False
 

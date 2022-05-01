@@ -31,6 +31,52 @@ def draw_PRM_path(screen,path,points):
         pygame.draw.circle(screen,BLACK,p,2)
     pygame.draw.lines(screen, GREEN,closed=False, points = path, width=1)
 
+def make_black(screen,nodes):
+    for node in nodes:
+        for obs in node:
+            rect = pygame.Rect(obs[0]*blockSize, obs[1]*blockSize, blockSize, blockSize)
+            pygame.draw.rect(screen, BLACK, rect)
+
+def spread_fire(burning,obs_map):
+    additions = []
+    for obs in burning:
+        for node in obs:
+            for k in obs_map:
+                for points in k:
+                    if euc_dist(points,node)<2:
+                        additions.append(k)
+                        break
+    burning = burning + additions
+    for i in additions:
+        if i in obs_map:
+            obs_map.remove(i)
+    return burning,obs_map
+
+
+def check_to_extinguish(burning,curr_node,extinguish):
+    for node in burning:
+        for obs in node:
+            goal = (obs[0]*3,obs[1]*3)
+            if euc_dist(curr_node,goal)<5:
+                extinguish.append(node)
+                burning.remove(node)
+                # print("watch",burning_dict)
+                # del burning_dict[tuple(node)]
+                break
+    return burning,extinguish
+
+
+def check_to_extinguishPRM(burning,curr_node,extinguish):
+    for node in burning:
+        for obs in node:
+            goal = (obs[0]*15,obs[1]*15)
+            if euc_dist(curr_node,goal)<25:
+                extinguish.append(node)
+                burning.remove(node)
+                # print("watch",burning_dict)
+                # del burning_dict[tuple(node)]
+                break
+    return burning,extinguish
 
 def find_nearest(burning,curr_node):
     min_dist = 1000000
@@ -44,17 +90,78 @@ def find_nearest(burning,curr_node):
                 out = obs         
     return out
 
+def burn(screen,nodes):
+    for node in nodes:
+        for obs in node:
+            rect = pygame.Rect(obs[0]*blockSize, obs[1]*blockSize, blockSize, blockSize)
+            pygame.draw.rect(screen, RED, rect)
 
-
+def burn_random(screen,obs_map):
+    [rand_index] = np.random.choice(np.arange(0,len(obs_map)),1)
+    for obs in obs_map[rand_index]:
+        rect = pygame.Rect(obs[0]*blockSize, obs[1]*blockSize, blockSize, blockSize)
+        pygame.draw.rect(screen, RED, rect)
+    return obs_map[rand_index]
     
 
 def generate_obstacles(screen,field):
     for (x, y), w in np.ndenumerate(field):
         color = GREEN if w == 1 else WHITE
-        # size = np.sqrt(abs(w) / max_weight)
+
         size = blockSize
         rect = pygame.Rect(x*blockSize, y*blockSize, size, size)
         pygame.draw.rect(screen, color, rect)
+
+
+def compute_static_obsmap(field):
+    b = 0
+    obs_map = []
+    grid = WINDOW_WIDTH//blockSize
+    T = grid*grid
+    field = np.zeros((grid,grid))
+
+    x_list = (5,5,5,5,15,15,15,15, 25,25,25,25)
+    y_list = (10,15,20,30,10,15,20,30,10,15,20,30)
+
+
+    for i in range(len(x_list)):
+        field, obs = place_t5(field,x_list[i],y_list[i])
+        obs_map.append(obs)
+    
+
+    return field,obs_map
+
+def compute_static_obsmap_lane_cars(field):
+    b = 0
+    obs_map = []
+    grid = WINDOW_WIDTH//blockSize
+    T = grid*grid
+    field = np.zeros((grid,grid))
+
+    x_list = (6,10,14,18,22,26,30,34)
+    y_list = (1,5,1,3,1,5,1,5)
+
+    for i in range(len(x_list)):
+        field, obs = place_t5(field,x_list[i],y_list[i])
+        obs_map.append(obs)
+
+    return field,obs_map
+
+def compute_dynamic_obsmap_lane_cars(field):
+    b = 0
+    obs_map = []
+    grid = WINDOW_WIDTH//blockSize
+    T = grid*grid
+    field = np.zeros((grid,grid))
+
+    x_list = [10]
+    y_list = [5]
+
+    for i in range(len(x_list)):
+        field, obs = place_t5(field,x_list[i],y_list[i])
+        obs_map.append(obs)
+
+    return field,obs_map
 
 def compute_obsmap(field,p):
     b = 0
@@ -67,8 +174,6 @@ def compute_obsmap(field,p):
         [r] = np.random.choice(np.arange(1,5),1)
         [x] = np.random.choice(np.arange(2,grid),1)
         [y]  = np.random.choice(np.arange(2,grid-3),1)
-        if (y >=10 and y<=15) or (y >=20 and y<=25) or (y >=30 and y<=35):
-            continue
         if(r==1):
             if(check_t1(field,x,y)):
                 b+=4
@@ -124,6 +229,12 @@ def check_t4(field,x,y):
         else:
             return False
 
+def check_t5(field,x,y):
+        if(field[x][y]==0 and field[x+1][y]==0 and field[x+2][y]==0 and field[x+3][y]==0):
+            return True
+        else:
+            return False
+
 def place_t1(field,x,y):
     field[x][y] = 1
     field[x][y+1] = 1
@@ -154,6 +265,14 @@ def place_t4(field,x,y):
     field[x][y+2] = 1
     field[x-1][y+1] = 1
     obs_index = [(x,y),(x,y+1),(x,y+2),(x-1,y+1)]
+    return field,obs_index
+
+def place_t5(field,x,y):            #For static cars
+    field[x][y] = 1
+    field[x+1][y] = 1
+    field[x+2][y] = 1
+    field[x+3][y] = 1
+    obs_index = [(x,y),(x+1,y),(x+2,y),(x+3,y)] 
     return field,obs_index
 
 class Player(pygame.sprite.Sprite):
@@ -204,9 +323,9 @@ class Player(pygame.sprite.Sprite):
     def PRM_navigate(self,path,curr_node,index,obs_map,dynamic_obs):
         if index<len(path):
             # ang = math.atan2((path[ind][1]-path[ind-1][1]),(path[ind][0]-path[ind-1][0]))
-            # print("curr_node",curr_node," ",index," ",path[index])
+            print("curr_node",curr_node," ",index," ",path[index])
             state,reached_waypoint = local_planner(curr_node,path[index],obs_map,dynamic_obs)
-            # print("new",state)
+            print("new",state)
             if reached_waypoint:
                 index+=1
             # print(path[ind][2],self.angle)
@@ -224,16 +343,19 @@ class Player(pygame.sprite.Sprite):
 
 
 class Dynamic_obs(pygame.sprite.Sprite):
-    def __init__(self,center):
+    def __init__(self, obs_center):
         super(Dynamic_obs, self).__init__()
         self.width = 50
         self.height = 25
+        self.obs_center = obs_center
         self.surf = pygame.Surface((self.width, self.height))
         self.surf.fill(BLACK)
         self.rect = self.surf.get_rect(
-            center=center
+            center=(
+                self.obs_center
+            )
         )
-        self.speed = 6
+        self.speed = 1
     
 
 
