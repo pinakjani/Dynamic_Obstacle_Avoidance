@@ -56,6 +56,58 @@ def generate_obstacles(screen,field):
         rect = pygame.Rect(x*blockSize, y*blockSize, size, size)
         pygame.draw.rect(screen, color, rect)
 
+
+def compute_static_obsmap(field):
+    b = 0
+    obs_map = []
+    grid = WINDOW_WIDTH//blockSize
+    T = grid*grid
+    field = np.zeros((grid,grid))
+
+    x_list = (5,5,5,5,15,15,15,15, 25,25,25,25)
+    y_list = (10,15,20,30,10,15,20,30,10,15,20,30)
+
+
+    for i in range(len(x_list)):
+        field, obs = place_t5(field,x_list[i],y_list[i])
+        obs_map.append(obs)
+    
+
+    return field,obs_map
+
+def compute_static_obsmap_lane_cars(field):
+    b = 0
+    obs_map = []
+    grid = WINDOW_WIDTH//blockSize
+    T = grid*grid
+    field = np.zeros((grid,grid))
+
+    x_list = (6,10,14,18,22,26,30,34)
+    y_list = (1,5,1,3,1,5,1,5)
+
+    for i in range(len(x_list)):
+        field, obs = place_t5(field,x_list[i],y_list[i])
+        obs_map.append(obs)
+
+    return field,obs_map
+
+def compute_dynamic_obsmap_lane_cars(field):
+    b = 0
+    obs_map = []
+    grid = WINDOW_WIDTH//blockSize
+    T = grid*grid
+    field = np.zeros((grid,grid))
+
+    x_list = [10]
+    y_list = [5]
+
+    for i in range(len(x_list)):
+        field, obs = place_t5(field,x_list[i],y_list[i])
+        obs_map.append(obs)
+
+    return field,obs_map
+
+
 def compute_obsmap(field,p):
     b = 0
     obs_map = []
@@ -124,6 +176,12 @@ def check_t4(field,x,y):
         else:
             return False
 
+def check_t5(field,x,y):
+        if(field[x][y]==0 and field[x+1][y]==0 and field[x+2][y]==0 and field[x+3][y]==0):
+            return True
+        else:
+            return False
+
 def place_t1(field,x,y):
     field[x][y] = 1
     field[x][y+1] = 1
@@ -154,6 +212,14 @@ def place_t4(field,x,y):
     field[x][y+2] = 1
     field[x-1][y+1] = 1
     obs_index = [(x,y),(x,y+1),(x,y+2),(x-1,y+1)]
+    return field,obs_index
+
+def place_t5(field,x,y):            #For static cars
+    field[x][y] = 1
+    field[x+1][y] = 1
+    field[x+2][y] = 1
+    field[x+3][y] = 1
+    obs_index = [(x,y),(x+1,y),(x+2,y),(x+3,y)] 
     return field,obs_index
 
 class Player(pygame.sprite.Sprite):

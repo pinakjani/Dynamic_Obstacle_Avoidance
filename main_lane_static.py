@@ -1,74 +1,64 @@
 from operator import index
 from numpy import angle, append
 import pygame
-from env import Dynamic_obs, draw_PRM_path, drawGrid, generate_obstacles, compute_obsmap
+from env import *
 from env import Player
 from global_vars import*
 from PRM import*
 import matplotlib.pyplot as plt
 import numpy as np
-pygame.init()
 
+def spawn_lanes(screen):
+    pygame.draw.line(screen,BLACK, (0, 5), (600, 5), width=2)
+    pygame.draw.line(screen,BLACK, (0, 32), (600, 32), width=2)
+    pygame.draw.line(screen,BLACK, (0, 68), (600, 68), width=2)
+    pygame.draw.line(screen,BLACK, (0, 95), (600, 95), width=2)
+
+prm_time = 0
+pygame.init()
 
 # Fill the background with white
 screen = pygame.display.set_mode([WINDOW_WIDTH,WINDOW_HEIGHT])
+pygame.display.set_caption('Static and Dynamic Obstacle Avoidance - Lane Maneuvering')
 
 player = Player((15,15))
 
 field = drawGrid(WINDOW_WIDTH,WINDOW_HEIGHT,screen)
 
-
 running = True
 count=0
 
-field,obstacle_map = compute_obsmap(field,0.05)
+field,obstacle_map = compute_static_obsmap_lane_cars(field)
+
 initial_obs = len(obstacle_map)
 obs_map = obstacle_map
-print('yaaaaay')
-generate_obstacles(screen,field)
-print("look")
-# screen.fill(WHITE)
 
-moving_obs = pygame.sprite.Group()
-new_obs = Dynamic_obs(center=(60,200))
-new_obs1 = Dynamic_obs(center=(20,360))
-new_obs2 = Dynamic_obs(center=(40,520))
-moving_obs.add(new_obs)
-moving_obs.add(new_obs1)
-moving_obs.add(new_obs2)
+generate_obstacles(screen,field)
+spawn_lanes(screen)
 
 screen.blit(player.new_image,player.rect)
 pygame.display.flip()
 
+#-------------------------- START and GOAL --------------------#
 start = (1,1)
 curr_node = (start[0],start[1],0)
-goal = (550,550)
-prm = PRMController(numOfRandomCoordinates=2000, allObs=obs_map, current=start,destination=goal,win_height=600,win_width=600)
+goal = (590,15)
+
+prm = PRMController(numOfRandomCoordinates=1500, allObs=obs_map, current=start,destination=goal,win_height=600,win_width=100)
 path,points = prm.runPRM(initialRandomSeed=0,screen = screen)
-# print("goal:",goal)
 
 dynamic = []
 ind = 1
 draw_PRM_path(screen,path,points)
+
 while running:
     count+=1    
-    # screen1 = pygame.display.set_mode([WINDOW_WIDTH,WINDOW_HEIGHT])
-    # print("see",burning_dict)
     screen.fill(WHITE)
     generate_obstacles(screen,field)
+    spawn_lanes(screen)
     draw_PRM_path(screen,path,points)
 
     if count%10==0:
-        player.i+=1
-        dynamic_obs_list = []
-        for obs in moving_obs:
-            Dynamic_obs.update(obs)
-            bound_x, bound_y = Dynamic_obs.get_boundary(obs)
-            dynamic_obs_list.append([bound_x,bound_y])
-            # print(bound_x, bound_y)
-            dynamic = dynamic_obs_list
-
-    if count%2==0:
         reached,curr_node,ind = player.PRM_navigate(path,curr_node,index=ind,obs_map=obs_map,dynamic_obs=dynamic)
         # print(burning,extinguish)
         if reached:
@@ -85,9 +75,6 @@ while running:
           
         # Check for QUIT event. If QUIT, then set running to false.
   
-    for obs in moving_obs:
-        screen.blit(obs.surf,obs.rect)    
-
     screen.blit(player.new_image,player.rect)
     # Flip the display
     pygame.display.flip()

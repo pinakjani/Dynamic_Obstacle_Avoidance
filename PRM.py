@@ -13,7 +13,7 @@ from Dijkstra import Graph, dijkstra, to_array
 import shapely.geometry
 
 class PRMController:
-    def __init__(self, numOfRandomCoordinates, allObs, current, destination):
+    def __init__(self, numOfRandomCoordinates, allObs, current, destination,win_height,win_width):
         self.numOfCoords = numOfRandomCoordinates
         self.coordsList = np.array([])
         self.allObs = allObs
@@ -23,6 +23,8 @@ class PRMController:
         # self.utils = Utils()
         self.solutionFound = False
         self.obsmap = []
+        self.win_width = win_width
+        self.win_height = win_height
 
     def runPRM(self,screen,initialRandomSeed=0):
         seed = initialRandomSeed
@@ -56,8 +58,14 @@ class PRMController:
         return final_path,self.collisionFreePoints
 
     def genCoords(self, maxSizeOfMap=WINDOW_WIDTH):
-        self.coordsList = np.random.randint(
-            maxSizeOfMap, size=(self.numOfCoords, 2))
+        coordsList_x = np.random.randint(
+            self.win_height, size=(self.numOfCoords, 1))
+
+        coordsList_y = np.random.randint(
+            self.win_width, size=(self.numOfCoords, 1))
+
+        self.coordsList = np.column_stack((coordsList_x, coordsList_y))
+
         # Adding begin and end points
         self.current = self.current.reshape(1, 2)
         self.destination = self.destination.reshape(1, 2)
