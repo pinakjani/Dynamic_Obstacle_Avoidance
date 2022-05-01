@@ -31,70 +31,6 @@ def draw_PRM_path(screen,path,points):
         pygame.draw.circle(screen,BLACK,p,2)
     pygame.draw.lines(screen, GREEN,closed=False, points = path, width=1)
 
-def make_black(screen,nodes):
-    for node in nodes:
-        for obs in node:
-            rect = pygame.Rect(obs[0]*blockSize, obs[1]*blockSize, blockSize, blockSize)
-            pygame.draw.rect(screen, BLACK, rect)
-
-# def spread_fire(burning,burning_dict,obs_map,count):
-#     additions = []
-#     for key in burning_dict:
-#         value = burning_dict[key]
-#         if value-count==-400:
-#             for obs in key:
-#                 # goal = (obs[0]*3,obs[1])
-#                 for k in obs_map:
-#                     for node in k:
-#                         if euc_dist(obs,node)<2:
-#                             burning.append(k)
-#                             additions.append(tuple(k))
-#                             break
-#     # for i in additions:
-#     #     burning_dict[i] = count
-
-#     return burning,burning_dict
-
-def spread_fire(burning,obs_map):
-    additions = []
-    for obs in burning:
-        for node in obs:
-            for k in obs_map:
-                for points in k:
-                    if euc_dist(points,node)<2:
-                        additions.append(k)
-                        break
-    burning = burning + additions
-    for i in additions:
-        if i in obs_map:
-            obs_map.remove(i)
-    return burning,obs_map
-
-
-def check_to_extinguish(burning,curr_node,extinguish):
-    for node in burning:
-        for obs in node:
-            goal = (obs[0]*3,obs[1]*3)
-            if euc_dist(curr_node,goal)<5:
-                extinguish.append(node)
-                burning.remove(node)
-                # print("watch",burning_dict)
-                # del burning_dict[tuple(node)]
-                break
-    return burning,extinguish
-
-
-def check_to_extinguishPRM(burning,curr_node,extinguish):
-    for node in burning:
-        for obs in node:
-            goal = (obs[0]*15,obs[1]*15)
-            if euc_dist(curr_node,goal)<25:
-                extinguish.append(node)
-                burning.remove(node)
-                # print("watch",burning_dict)
-                # del burning_dict[tuple(node)]
-                break
-    return burning,extinguish
 
 def find_nearest(burning,curr_node):
     min_dist = 1000000
@@ -108,18 +44,8 @@ def find_nearest(burning,curr_node):
                 out = obs         
     return out
 
-def burn(screen,nodes):
-    for node in nodes:
-        for obs in node:
-            rect = pygame.Rect(obs[0]*blockSize, obs[1]*blockSize, blockSize, blockSize)
-            pygame.draw.rect(screen, RED, rect)
 
-def burn_random(screen,obs_map):
-    [rand_index] = np.random.choice(np.arange(0,len(obs_map)),1)
-    for obs in obs_map[rand_index]:
-        rect = pygame.Rect(obs[0]*blockSize, obs[1]*blockSize, blockSize, blockSize)
-        pygame.draw.rect(screen, RED, rect)
-    return obs_map[rand_index]
+
     
 
 def generate_obstacles(screen,field):
@@ -141,6 +67,8 @@ def compute_obsmap(field,p):
         [r] = np.random.choice(np.arange(1,5),1)
         [x] = np.random.choice(np.arange(2,grid),1)
         [y]  = np.random.choice(np.arange(2,grid-3),1)
+        if (y >=10 and y<=15) or (y >=20 and y<=25) or (y >=30 and y<=35):
+            continue
         if(r==1):
             if(check_t1(field,x,y)):
                 b+=4
@@ -296,17 +224,14 @@ class Player(pygame.sprite.Sprite):
 
 
 class Dynamic_obs(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self,center):
         super(Dynamic_obs, self).__init__()
         self.width = 50
         self.height = 25
         self.surf = pygame.Surface((self.width, self.height))
         self.surf.fill(BLACK)
         self.rect = self.surf.get_rect(
-            center=(
-                random.randint(5, 500),
-                random.randint(5, 500),
-            )
+            center=center
         )
         self.speed = 6
     
@@ -358,8 +283,8 @@ class Dynamic_obs(pygame.sprite.Sprite):
         width_const, height_const = self.find_boundary_ego_vehicle()
         bound_x = []
         bound_y = []
-        width_const*=2
-        height_const*=2
+        width_const*=3
+        height_const*=3
         bound_x_right_top = corner_x[0] + width_const
         bound_x.append(bound_x_right_top)
         bound_y_right_top = corner_y[0] - height_const

@@ -12,14 +12,14 @@ grid_width = WINDOW_WIDTH//blockSize
 grid_height = WINDOW_HEIGHT//blockSize
 
 
-def fire_goal(node,obs):
-    min_dist = 100000
-    for target_node in obs:
-        d = euc_dist(node,target_node)
-        if d<min_dist:
-            min_dist = d
-            goal_node = target_node
-    return goal_node
+# def fire_goal(node,obs):
+#     min_dist = 100000
+#     for target_node in obs:
+#         d = euc_dist(node,target_node)
+#         if d<min_dist:
+#             min_dist = d
+#             goal_node = target_node
+#     return goal_node
 
 def new_field(field):
     new_field = np.zeros((grid_width,grid_height))

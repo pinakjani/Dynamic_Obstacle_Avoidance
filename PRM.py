@@ -52,9 +52,6 @@ class PRMController:
             # self.coordsList = np.array([])
             # self.graph = Graph()
 
-        # if(saveImage):
-            # plt.savefig("{}_samples.png".format(self.numOfCoords))
-        # plt.show()
         print("Collision Free Points",self.collisionFreePoints)
         return final_path,self.collisionFreePoints
 

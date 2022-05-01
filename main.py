@@ -1,16 +1,16 @@
 from operator import index
 from numpy import angle, append
 import pygame
-from env import Dynamic_obs, burn_random, check_to_extinguishPRM, draw_PRM_path, draw_path, drawGrid, find_nearest, generate_obstacles, compute_obsmap, burn, make_black, spread_fire
+from env import Dynamic_obs, draw_PRM_path, drawGrid, generate_obstacles, compute_obsmap
 from env import Player
 from global_vars import*
 from PRM import*
 import matplotlib.pyplot as plt
 import numpy as np
-prm_time = 0
 pygame.init()
 
-
+WINDOW_WIDTH = WINDOW_WIDTH1
+WINDOW_HEIGHT = WINDOW_HEIGHT1
 
 # Fill the background with white
 screen = pygame.display.set_mode([WINDOW_WIDTH,WINDOW_HEIGHT])
@@ -32,9 +32,9 @@ print("look")
 # screen.fill(WHITE)
 
 moving_obs = pygame.sprite.Group()
-new_obs = Dynamic_obs()
-new_obs1 = Dynamic_obs()
-new_obs2 = Dynamic_obs()
+new_obs = Dynamic_obs(center=(60,200))
+new_obs1 = Dynamic_obs(center=(20,360))
+new_obs2 = Dynamic_obs(center=(40,520))
 moving_obs.add(new_obs)
 moving_obs.add(new_obs1)
 moving_obs.add(new_obs2)
@@ -60,7 +60,7 @@ while running:
     generate_obstacles(screen,field)
     draw_PRM_path(screen,path,points)
 
-    if count%15==0:
+    if count%10==0:
         player.i+=1
         dynamic_obs_list = []
         for obs in moving_obs:
@@ -70,11 +70,11 @@ while running:
             # print(bound_x, bound_y)
             dynamic = dynamic_obs_list
 
-    # if count%==0:
-    reached,curr_node,ind = player.PRM_navigate(path,curr_node,index=ind,obs_map=obs_map,dynamic_obs=dynamic)
-    # print(burning,extinguish)
-    if reached:
-        running = False
+    if count%2==0:
+        reached,curr_node,ind = player.PRM_navigate(path,curr_node,index=ind,obs_map=obs_map,dynamic_obs=dynamic)
+        # print(burning,extinguish)
+        if reached:
+            running = False
     #
     # Did the user click the window close button?
     for event in pygame.event.get():
