@@ -218,8 +218,8 @@ def local_planner(curr_state,goal,obs_map,dynamic_obs):
         if dist<min_dist:
             out = state
             min_dist = dist
-        print("min",min_dist," ",out)
-    if min_dist<=20:
+        # print("min",min_dist," ",out)
+    if min_dist<=10:
         reached_goal = True
     return out,reached_goal
 

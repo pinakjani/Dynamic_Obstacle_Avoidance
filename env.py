@@ -276,9 +276,9 @@ class Player(pygame.sprite.Sprite):
     def PRM_navigate(self,path,curr_node,index,obs_map,dynamic_obs):
         if index<len(path):
             # ang = math.atan2((path[ind][1]-path[ind-1][1]),(path[ind][0]-path[ind-1][0]))
-            print("curr_node",curr_node," ",index," ",path[index])
+            # print("curr_node",curr_node," ",index," ",path[index])
             state,reached_waypoint = local_planner(curr_node,path[index],obs_map,dynamic_obs)
-            print("new",state)
+            # print("new",state)
             if reached_waypoint:
                 index+=1
             # print(path[ind][2],self.angle)

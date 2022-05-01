@@ -23,7 +23,7 @@ field = drawGrid(WINDOW_WIDTH,WINDOW_HEIGHT,screen)
 running = True
 count=0
 
-field,obstacle_map = compute_obsmap(field,0.02)
+field,obstacle_map = compute_obsmap(field,0.05)
 initial_obs = len(obstacle_map)
 obs_map = obstacle_map
 print('yaaaaay')
@@ -60,7 +60,7 @@ while running:
     generate_obstacles(screen,field)
     draw_PRM_path(screen,path,points)
 
-    if count%20==0:
+    if count%15==0:
         player.i+=1
         dynamic_obs_list = []
         for obs in moving_obs:
@@ -70,10 +70,11 @@ while running:
             # print(bound_x, bound_y)
             dynamic = dynamic_obs_list
 
+    # if count%==0:
     reached,curr_node,ind = player.PRM_navigate(path,curr_node,index=ind,obs_map=obs_map,dynamic_obs=dynamic)
     # print(burning,extinguish)
     if reached:
-       running = False
+        running = False
     #
     # Did the user click the window close button?
     for event in pygame.event.get():
