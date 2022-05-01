@@ -1,4 +1,4 @@
-# Dynamic_Obstacle_Avoidance
+# Real-Time Motion Planning With Dynamic Obstacle Avoidance  for Autonomous Vehicles
 Motion Planning Project 
 
 Please run the following files to view the desired outputs:
